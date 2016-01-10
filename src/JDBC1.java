@@ -1,5 +1,6 @@
 import java.sql.*;                              // Enable SQL processing
 import java.io.*;
+import java.util.Scanner;
 
 public class JDBC1
 {
@@ -41,11 +42,36 @@ public class JDBC1
         }
     }
 
+    public static void addNewStar() throws Exception {
+        connection = DriverManager.getConnection("jdbc:mysql:///moviedb","root", "cs122b");
+        Scanner in = new Scanner(System.in);
+        System.out.println("Please enter the actor's name: ");
+        String name = in.nextLine();
+        String[] names = name.split(" ");
+        String firstName = "";
+        String lastName;
+        if (names.length == 1) {
+            lastName = names[0];
+        }
+        else {
+            firstName = names[0];
+            lastName = names[1];
+        }
+
+        // Create an execute an SQL statement to select all of table"Stars" records
+        String insertString = "insert into stars (first_name, last_name) values (?, ?)";
+        PreparedStatement insertStar = connection.prepareStatement(insertString);
+        insertStar.setString(1, firstName);
+        insertStar.setString(2, lastName);
+        insertStar.executeUpdate();
+    }
+
     public static void main(String[] arg) throws Exception
     {
 
         // Incorporate mySQL driver
         Class.forName("com.mysql.jdbc.Driver").newInstance();
-        getStar();
+        //getStar();
+        //addNewStar();
     }
 }
