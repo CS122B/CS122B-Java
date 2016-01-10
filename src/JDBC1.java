@@ -1,7 +1,3 @@
-/**
- * Created by Van on 1/10/2016.
- */
-
 import java.sql.*;                              // Enable SQL processing
 import java.io.*;
 
@@ -11,15 +7,15 @@ public class JDBC1
 
     public static void getStar() throws Exception {
         // Connect to the test database
-        connection = DriverManager.getConnection("jdbc:mysql:///moviedb","root", "P@ssword1");
+        connection = DriverManager.getConnection("jdbc:mysql:///moviedb","root", "cs122b");
 
         // Create an execute an SQL statement to select all of table"Stars" records
 //        Statement select = connection.createStatement();
         int choice = 0;
-        String statement
-        switch (choice) {
-            case 0:
-        }
+//        String statement
+//        switch (choice) {
+//            case 0:
+//        }
         PreparedStatement statement = connection.prepareStatement("SELECT * FROM stars WHERE first_name = ? AND last_name = ?");
         statement.setString(1, "Kristin");
         statement.setString(2, "Kreuk");
