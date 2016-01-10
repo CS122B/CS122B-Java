@@ -58,12 +58,59 @@ public class JDBC1
             lastName = names[1];
         }
 
-        // Create an execute an SQL statement to select all of table"Stars" records
+        // Create an execute an SQL statement to insert new record into stars
         String insertString = "insert into stars (first_name, last_name) values (?, ?)";
         PreparedStatement insertStar = connection.prepareStatement(insertString);
         insertStar.setString(1, firstName);
         insertStar.setString(2, lastName);
         insertStar.executeUpdate();
+    }
+
+    public static void addNewCustomer() throws Exception{
+        connection = DriverManager.getConnection("jdbc:mysql:///moviedb","root", "cs122b");
+        Scanner in = new Scanner(System.in);
+
+        System.out.println("First name:");
+        String firstName = in.nextLine();
+        System.out.println("Last name:");
+        String lastName = in.nextLine();
+        System.out.println("Credit Card #:");
+        String creditCard = in.nextLine();
+        System.out.println("Address: ");
+        String address = in.nextLine();
+        System.out.println("Email:");
+        String email = in.nextLine();
+        System.out.println("Password:");
+        String password = in.nextLine();
+
+        // Create an execute an SQL statement to select credit card record if available
+        String selectString = "select count(*) from creditcards where id = ?";
+        PreparedStatement selectCC = connection.prepareStatement(selectString);
+        selectCC.setString(1, creditCard);
+        ResultSet result = selectCC.executeQuery();
+
+        boolean validCC = false;
+        while(result.next()) {
+            if (result.getInt(1) > 0)
+                validCC = true;
+        }
+
+        if (validCC) {
+            String insertString = "insert into customers(first_name, last_name, cc_id, address, email, password)" +
+                    "values (?,?,?,?,?,?)";
+            PreparedStatement insertCustomer = connection.prepareStatement(insertString);
+            insertCustomer.setString(1,firstName);
+            insertCustomer.setString(2,lastName);
+            insertCustomer.setString(3,creditCard);
+            insertCustomer.setString(4,address);
+            insertCustomer.setString(5,email);
+            insertCustomer.setString(6,password);
+            insertCustomer.executeUpdate();
+        }
+        else {
+            System.out.println("Invalid credit card. Please try again.");
+            addNewCustomer();
+        }
     }
 
     public static void main(String[] arg) throws Exception
@@ -73,5 +120,6 @@ public class JDBC1
         Class.forName("com.mysql.jdbc.Driver").newInstance();
         //getStar();
         //addNewStar();
+        //addNewCustomer();
     }
 }
