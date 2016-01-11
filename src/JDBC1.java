@@ -1,3 +1,6 @@
+import com.mysql.jdbc.CommunicationsException;
+
+import java.net.ConnectException;
 import java.sql.*;                              // Enable SQL processing
 import java.io.*;
 import java.util.Scanner;
@@ -85,6 +88,7 @@ public class JDBC1
             statement.setString(1, in.next());
             System.out.print("Last name: ");
             statement.setString(2, in.next());
+            break;
         case 1:
             query = (
                 "SELECT * FROM movies as m " +
@@ -104,6 +108,7 @@ public class JDBC1
             statement.setString(1, in.next());
             System.out.print("Last name: ");
             statement.setString(2, in.next());
+            break;
         case 2:
             query = (
                 "SELECT * FROM movies as m " +
@@ -115,6 +120,7 @@ public class JDBC1
 
             System.out.print("ID: ");
             statement.setString(1, in.next());
+            break;
         default:
         }
 
@@ -198,13 +204,19 @@ public class JDBC1
 
     public static void main(String[] arg) throws Exception
     {
-        // Incorporate mySQL driver
-        Class.forName("com.mysql.jdbc.Driver").newInstance();
-        connection = DriverManager.getConnection("jdbc:mysql:///moviedb","root", "P@ssword1");
-        in = new Scanner(System.in);
+        try {
+            // Incorporate mySQL driver
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            connection = DriverManager.getConnection("jdbc:mysql:///moviedb", "root", "P@ssword1");
+            in = new Scanner(System.in);
 
-//        getStar();
-//        addNewStar();
-//        addNewCustomer();
+//            getStar();
+//            addNewStar();
+//            addNewCustomer();
+        } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
+            System.out.println("Connection Error: could not connect to the given database.");
+        } catch (SQLException e) {
+            System.out.println("Access Error: incorrect username or password.");
+        }
     }
 }
