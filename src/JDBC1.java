@@ -9,6 +9,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.Arrays;
 
 public class JDBC1
 {
@@ -321,6 +322,7 @@ public class JDBC1
                 getDatabaseMetadata();
                 break;
             case 5:
+                executeCustomSQL();
                 break;
             case 6:
                 initializeCredentials();
@@ -335,6 +337,46 @@ public class JDBC1
         in.close();
         connection.close();
     }
+
+    public static void executeCustomSQL() throws Exception {
+        connection = DriverManager.getConnection("jdbc:mysql:///moviedb","root", "cs122b");
+        String[] validCommands = {"select", "update", "insert", "delete"};
+        Scanner in = new Scanner(System.in);
+        System.out.println("Please enter a SQL statement on the following line:");
+        String sqlStatement = in.nextLine();
+        String sqlType = sqlStatement.split(" ")[0].toLowerCase();
+        if (Arrays.asList(validCommands).contains(sqlType)) {
+            // is a valid command. execute it
+            Statement command = connection.createStatement();
+            System.out.println("Results for " + sqlStatement + ":");
+            if (sqlType.equals("select")) {
+                // executeQuery
+                System.out.println(sqlStatement);
+                ResultSet result = command.executeQuery(sqlStatement);
+                ResultSetMetaData metadata = result.getMetaData();
+                int columnsNumber = metadata.getColumnCount();
+                while (result.next()) {
+                    for (int i = 1; i <= columnsNumber; i++) {
+                        if (i > 1) System.out.print(",  ");
+                        String columnValue = result.getString(i);
+                        System.out.print(metadata.getColumnName(i) + ": " + columnValue);
+                    }
+                    System.out.println("");
+                }
+            }
+            // invalid SQL. prompt user for further action
+            else {
+                // executeUpdate
+                int result = command.executeUpdate(sqlStatement);
+                System.out.println("Number of rows affected: " + result);
+            }
+        }
+        else {
+            System.out.println("Invalid SQL statement. Please try again.");
+            executeCustomSQL();
+        }
+    }
+
 
     public static void main(String[] arg) throws Exception
     {
