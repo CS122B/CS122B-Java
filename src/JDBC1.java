@@ -1,15 +1,20 @@
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.sql.*;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.util.Properties;
 import java.util.Scanner;
 
 public class JDBC1
 {
     private static Connection connection = null;
     private static Scanner in = null;
+    private static final Properties config = new Properties();
     private static final boolean __DEV__ = true;
 
     public static void printHeader(String header) {
@@ -266,10 +271,11 @@ public class JDBC1
         String username;
         String password;
 
-        if (__DEV__) {
-            database = "jdbc:mysql:///moviedb";
-            username = "root";
-            password = "P@ssword1";
+        //noinspection PointlessBooleanExpression
+        if (__DEV__ && config.containsKey("database")) {
+            database = config.getProperty("database");
+            username = config.getProperty("username");
+            password = config.getProperty("password");
         } else {
             database = "jdbc:mysql:///" + getStringInput("Database");
             username = getStringInput("Username");
@@ -333,9 +339,17 @@ public class JDBC1
     public static void main(String[] arg) throws Exception
     {
         try {
+            InputStream configInput = new FileInputStream("resources/config.properties");
+            config.load(configInput);
+        } catch (FileNotFoundException e) {
+            if (__DEV__) {
+                printHeader("WARNING: no `config.properties`");
+            }
+        }
+
+        try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             in = new Scanner(System.in);
-
             initializeCredentials();
             runMenu();
         } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
