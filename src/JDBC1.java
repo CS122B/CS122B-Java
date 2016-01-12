@@ -1,9 +1,4 @@
-import com.mysql.jdbc.*;
-
-import javax.xml.crypto.Data;
-import java.net.ConnectException;
-import java.sql.*;                              // Enable SQL processing
-import java.io.*;
+import java.sql.*;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -15,51 +10,63 @@ public class JDBC1
 {
     private static Connection connection = null;
     private static Scanner in = null;
+    private static final boolean __DEV__ = true;
+
+    public static void printHeader(String header) {
+        System.out.println("------------------------");
+        System.out.println(header);
+        System.out.println("------------------------\n");
+    }
+
+    public static String getStringInput(String value) {
+        System.out.print(value + ": ");
+        return in.nextLine();
+    }
 
     public static int getUserChoice(String[] choices) {
         int choice = -1;
 
         System.out.println("Please enter a choice: ");
         for (int i = 0; i < choices.length; ++i) {
-            System.out.format("%d: %s\n", i, choices[i]);
+            System.out.format("%d: %s\n", i+1, choices[i]);
         }
 
         if (in.hasNextInt()) {
-            choice = in.nextInt();
+            choice = in.nextInt() - 1;
         }
 
-        while (choice < 0 || choice > choices.length) {
+        while (choice < 0 || choice >= choices.length) {
             System.out.println("Invalid choice. Please enter a choice: ");
 
-            in.next();
+            in.nextLine();
             if (in.hasNextInt()) {
-                choice = in.nextInt();
+                choice = in.nextInt() - 1;
             }
         }
+        in.nextLine();
+
+        printHeader(choices[choice]);
 
         return choice;
     }
 
-    public static void printResults(ResultSet result, String[] colNames) throws SQLException {
-        System.out.println("\n------------------------");
-        System.out.println("Query Results");
-        System.out.println("------------------------\n");
+    public static void printResults(ResultSet result) throws SQLException {
+        printHeader("Query Results");
+        ResultSetMetaData metadata = result.getMetaData();
 
         int rowCount = 0;
 
-        while (result.next())
-        {
-            for (int i = 0; i < colNames.length; ++i) {
-                if (!result.getString(i+1).equals("")) {
-                    System.out.format("%s = %s\n", colNames[i], result.getString(i+1));
+        while (result.next()) {
+            for (int i = 1; i <= metadata.getColumnCount(); ++i) {
+                if (!result.getString(i).equals("")) {
+                    System.out.format("%s = %s\n", metadata.getColumnName(i), result.getString(i));
                 }
             }
             System.out.println();
             ++rowCount;
         }
 
-        System.out.println("Total Rows: " + rowCount);
-        System.out.println("------------------------");
+        printHeader("Total Rows: " + rowCount);
     }
 
     public static void getStar() throws Exception {
@@ -71,8 +78,9 @@ public class JDBC1
         int choice = getUserChoice(choices);
         String query;
         PreparedStatement statement = connection.prepareStatement("");
-
-        System.out.format("Choice Selected: %d [%s]\n", choice, choices[choice]);
+        String firstName;
+        String lastName;
+        String ID;
 
         switch (choice) {
         case 0:
@@ -89,11 +97,11 @@ public class JDBC1
                 ")"
             );
             statement = connection.prepareStatement(query);
+            firstName = getStringInput("First name");
+            lastName = getStringInput("Last name");
+            statement.setString(1, firstName);
+            statement.setString(2, lastName);
 
-            System.out.print("First name: ");
-            statement.setString(1, in.next());
-            System.out.print("Last name: ");
-            statement.setString(2, in.next());
             break;
         case 1:
             query = (
@@ -109,11 +117,11 @@ public class JDBC1
                 ")"
             );
             statement = connection.prepareStatement(query);
+            firstName = getStringInput("First name");
+            lastName = getStringInput("Last name");
+            statement.setString(1, firstName);
+            statement.setString(2, lastName);
 
-            System.out.print("First name: ");
-            statement.setString(1, in.next());
-            System.out.print("Last name: ");
-            statement.setString(2, in.next());
             break;
         case 2:
             query = (
@@ -123,63 +131,56 @@ public class JDBC1
                 "WHERE sim.star_id = ?"
             );
             statement = connection.prepareStatement(query);
-
-            System.out.print("ID: ");
-            statement.setString(1, in.next());
+            ID = getStringInput("ID");
+            statement.setString(1, ID);
             break;
         default:
+            break;
         }
 
         ResultSet result = statement.executeQuery();
-        String[] colNames = {
-                "Id",
-                "Title",
-                "Year",
-                "Director",
-                "Banner URL",
-                "Trailer URL"
-        };
-        printResults(result, colNames);
+        printResults(result);
     }
 
     public static void addNewStar() throws Exception {
-        System.out.println("Please enter the actor's name: ");
-        String name = in.nextLine();
+        String name = getStringInput("Enter actor's name (first and/or last)");
         String[] names = name.split(" ");
         String firstName = "";
         String lastName;
+
         if (names.length == 1) {
             lastName = names[0];
-        }
-        else {
+        } else {
             firstName = names[0];
             lastName = names[1];
         }
 
         // Create an execute an SQL statement to insert new record into stars
-        String insertString = "insert into stars (first_name, last_name) values (?, ?)";
+        String insertString = (
+            "INSERT INTO stars (first_name, last_name) " +
+            "VALUES (?, ?)"
+        );
         PreparedStatement insertStar = connection.prepareStatement(insertString);
+
         insertStar.setString(1, firstName);
         insertStar.setString(2, lastName);
+
         insertStar.executeUpdate();
     }
 
     public static void addNewCustomer() throws Exception{
-        System.out.println("First name:");
-        String firstName = in.nextLine();
-        System.out.println("Last name:");
-        String lastName = in.nextLine();
-        System.out.println("Credit Card #:");
-        String creditCard = in.nextLine();
-        System.out.println("Address: ");
-        String address = in.nextLine();
-        System.out.println("Email:");
-        String email = in.nextLine();
-        System.out.println("Password:");
-        String password = in.nextLine();
+        String firstName = getStringInput("First name");
+        String lastName = getStringInput("Last name");
+        String creditCard = getStringInput("Credit Card #");
+        String address = getStringInput("Address");
+        String email = getStringInput("Email");
+        String password = getStringInput("Password");
 
-        // Create an execute an SQL statement to select credit card record if available
-        String selectString = "select count(*) from creditcards where id = ?";
+        String selectString = (
+            "SELECT count(*) " +
+            "FROM creditcards " +
+            "WHERE id = ?"
+        );
         PreparedStatement selectCC = connection.prepareStatement(selectString);
         selectCC.setString(1, creditCard);
         ResultSet result = selectCC.executeQuery();
@@ -191,28 +192,32 @@ public class JDBC1
         }
 
         if (validCC) {
-            String insertString = "insert into customers(first_name, last_name, cc_id, address, email, password)" +
-                    "values (?,?,?,?,?,?)";
-            PreparedStatement insertCustomer = connection.prepareStatement(insertString);
-            insertCustomer.setString(1,firstName);
-            insertCustomer.setString(2,lastName);
-            insertCustomer.setString(3,creditCard);
-            insertCustomer.setString(4,address);
-            insertCustomer.setString(5,email);
-            insertCustomer.setString(6,password);
-            insertCustomer.executeUpdate();
-        }
-        else {
+            String query = (
+                "INSERT INTO customers( " +
+                "   first_name, last_name, cc_id, " +
+                "   address, email, password " +
+                ") VALUES (?, ?, ?, ?, ?, ?)"
+            );
+            PreparedStatement statement = connection.prepareStatement(query);
+
+            statement.setString(1,firstName);
+            statement.setString(2,lastName);
+            statement.setString(3,creditCard);
+            statement.setString(4,address);
+            statement.setString(5,email);
+            statement.setString(6,password);
+
+            statement.executeUpdate();
+        } else {
             System.out.println("Invalid credit card. Please try again.");
             addNewCustomer();
         }
     }
 
     public static void deleteCustomer() throws SQLException {
-        System.out.println("Email:");
-        String email = in.nextLine();
-        System.out.println("Password:");
-        String password = in.nextLine();
+        String email = getStringInput("Email");
+        String password = getStringInput("Password");
+
         String query = (
             "DELETE FROM customers " +
             "WHERE email = ? AND password = ?"
@@ -231,9 +236,7 @@ public class JDBC1
     }
 
     private static void _getTableMetadata(String tableName) throws SQLException {
-        System.out.println("\n------------------------");
-        System.out.format("Table name: `%s`\n", tableName);
-        System.out.println("------------------------\n");
+        printHeader("Table name: `" + tableName + "`");
 
         String query = "SELECT * FROM " + tableName;
         Statement statement = connection.createStatement();
@@ -247,6 +250,7 @@ public class JDBC1
             String colType = metadata.getColumnTypeName(i);
             System.out.format("`%s` = %s\n", colName, colType);
         }
+        System.out.println();
     }
 
     public static void getDatabaseMetadata() throws SQLException {
@@ -257,19 +261,83 @@ public class JDBC1
         }
     }
 
+    public static void initializeCredentials() throws SQLException {
+        String database;
+        String username;
+        String password;
+
+        if (__DEV__) {
+            database = "jdbc:mysql:///moviedb";
+            username = "root";
+            password = "P@ssword1";
+        } else {
+            database = "jdbc:mysql:///" + getStringInput("Database");
+            username = getStringInput("Username");
+            password = getStringInput("Password");
+        }
+        connection = DriverManager.getConnection(database, username, password);
+
+        printHeader("Connected to database.");
+    }
+
+    public static void runMenu() throws Exception {
+        String[] menuChoices = {
+            "Get star",
+            "Add star",
+            "Add customer",
+            "Delete customer",
+            "Get database metadata",
+            "Enter SQL command",
+            "Re-enter credentials",
+            "Exit program"
+        };
+        int choice;
+        boolean whileFlag = true;
+
+        do {
+            printHeader("Main Menu");
+            choice = getUserChoice(menuChoices);
+
+            switch(choice) {
+            case 0:
+                getStar();
+                break;
+            case 1:
+                addNewStar();
+                break;
+            case 2:
+                addNewCustomer();
+                break;
+            case 3:
+                deleteCustomer();
+                break;
+            case 4:
+                getDatabaseMetadata();
+                break;
+            case 5:
+                break;
+            case 6:
+                initializeCredentials();
+                break;
+            case 7:
+            default:
+                whileFlag = false;
+                break;
+            }
+        } while (whileFlag);
+
+        in.close();
+        connection.close();
+    }
+
     public static void main(String[] arg) throws Exception
     {
         try {
-            // Incorporate mySQL driver
             Class.forName("com.mysql.jdbc.Driver").newInstance();
-            connection = DriverManager.getConnection("jdbc:mysql:///moviedb", "root", "P@ssword1");
             in = new Scanner(System.in);
 
-//            getStar();
-//            addNewStar();
-//            addNewCustomer();
-//            deleteCustomer();
-            getDatabaseMetadata();
+            initializeCredentials();
+            runMenu();
         } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
             System.out.println("Connection Error: could not connect to the given database.");
         } catch (SQLException e) {
