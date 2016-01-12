@@ -1,8 +1,14 @@
-import com.mysql.jdbc.CommunicationsException;
+import com.mysql.jdbc.*;
 
+import javax.xml.crypto.Data;
 import java.net.ConnectException;
 import java.sql.*;                              // Enable SQL processing
 import java.io.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 import java.util.Scanner;
 
 public class JDBC1
@@ -212,13 +218,42 @@ public class JDBC1
             "WHERE email = ? AND password = ?"
         );
         PreparedStatement statement = connection.prepareStatement(query);
+
         statement.setString(1, email);
         statement.setString(2, password);
+
         int returnId = statement.executeUpdate();
         if (returnId == 0) {
             System.out.println("Incorrect email or password.");
         } else {
             System.out.format("User with email `%s` was deleted successfully.\n", email);
+        }
+    }
+
+    private static void _getTableMetadata(String tableName) throws SQLException {
+        System.out.println("\n------------------------");
+        System.out.format("Table name: `%s`\n", tableName);
+        System.out.println("------------------------\n");
+
+        String query = "SELECT * FROM " + tableName;
+        Statement statement = connection.createStatement();
+        ResultSet result = statement.executeQuery(query);
+        ResultSetMetaData metadata = result.getMetaData();
+
+        System.out.println("There are " + metadata.getColumnCount() + " columns");
+
+        for (int i = 1; i <= metadata.getColumnCount(); i++) {
+            String colName = metadata.getColumnName(i);
+            String colType = metadata.getColumnTypeName(i);
+            System.out.format("`%s` = %s\n", colName, colType);
+        }
+    }
+
+    public static void getDatabaseMetadata() throws SQLException {
+        DatabaseMetaData md = connection.getMetaData();
+        ResultSet result = md.getTables(null, null, "%", null);
+        while (result.next()) {
+            _getTableMetadata(result.getString(3));
         }
     }
 
@@ -234,6 +269,7 @@ public class JDBC1
 //            addNewStar();
 //            addNewCustomer();
 //            deleteCustomer();
+            getDatabaseMetadata();
         } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
             System.out.println("Connection Error: could not connect to the given database.");
         } catch (SQLException e) {
