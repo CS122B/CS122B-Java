@@ -202,6 +202,26 @@ public class JDBC1
         }
     }
 
+    public static void deleteCustomer() throws SQLException {
+        System.out.println("Email:");
+        String email = in.nextLine();
+        System.out.println("Password:");
+        String password = in.nextLine();
+        String query = (
+            "DELETE FROM customers " +
+            "WHERE email = ? AND password = ?"
+        );
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setString(1, email);
+        statement.setString(2, password);
+        int returnId = statement.executeUpdate();
+        if (returnId == 0) {
+            System.out.println("Incorrect email or password.");
+        } else {
+            System.out.format("User with email `%s` was deleted successfully.\n", email);
+        }
+    }
+
     public static void main(String[] arg) throws Exception
     {
         try {
@@ -213,6 +233,7 @@ public class JDBC1
 //            getStar();
 //            addNewStar();
 //            addNewCustomer();
+//            deleteCustomer();
         } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
             System.out.println("Connection Error: could not connect to the given database.");
         } catch (SQLException e) {
